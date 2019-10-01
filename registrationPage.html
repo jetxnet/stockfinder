@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#222222">
+
+	<title>PDF Contracts</title>
+	<meta name="description" content="Digital Contracts made simple">
+
+	<!-- Stylesheet -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+		integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="styles/app.css" rel="stylesheet" type="text/css">
+
+	<!-- Google Fonts -->
+	<link href="https://fonts.googleapis.com/css?family=Comfortaa:400,700|Open+Sans|Inconsolata" rel="stylesheet">
+
+	<!-- JQuery -->
+	<script src="/js/jquery-2.1.4.min.js"></script>
+	<script src="/js/jquery-ui.js"></script>
+
+	<!-- JS Libs -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+	<script src="../Components/Login.js?id=1"></script>
+	<script src="../js/bootstrap-select.min.js?id=1"></script>
+	<script src="../js/components.js?v=1"></script>
+	<script src="../Components/Modal.js?id=3"></script>
+	<script src="../Components/DocForm.js?id=3"></script>
+	<script src="../Components/Constants.js?id=4"></script>
+	<script src="../Components/Company.js?id=4"></script>
+	<script src="../Components/User.js?id=4"></script>
+
+</head>
+
+<body>
+	<table>
+		<tr>
+			<td align="center">
+				<header>
+					<h1>PDF Contracts</h1>
+				</header>
+			</td>
+		</tr>
+	</table>
+
+	<main>
+		<div class="row">
+			<div class="md-col-12">
+				<h2 style="color:black">Register: Step 1 of 2</h2>The business administrator has the ability to create
+				new users and assign permissions. All user names are the <span style="font-style:italic">business
+					email</span>.
+			</div>
+		</div>
+		<div style="height:9vh">
+			<!-- filler div -->
+		</div>
+		<div>
+			<table>
+				<tr>
+					<td class="panelLogin rcorners" align="center">
+						<div class="row">
+							<div class="col-md-6 col-md-offset-1"><input class="registrationForm" id="businessName"
+									style="margin-left:4vw; width:300px; height:30px;" type="text" name="businessName"
+									placeholder="Business name" value=""></div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 col-md-offset-1"><input class="registrationForm" id="adminName"
+									style="margin-left:4vw; width:300px; height:30px;" type="text" name="email"
+									placeholder="New Admin Name (your name)" value=""></div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 col-md-offset-1"><input class="registrationForm" id="email"
+									style="margin-left:4vw; width:300px; height:30px;" type="text" name="email"
+									placeholder="New Admin Email" value=""></div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 col-md-offset-1"><input class="registrationForm" id="pass"
+									style="margin-left:4vw; width:300px; height:30px;" type="text" name="pass"
+									placeholder="New Admin Password" value=""></div>
+						</div>
+						<div class="row">
+							<button id="ButtonRegister" type="button" class="btn buttonLogin">Register</button>
+						</div>
+						<div class="row">
+							<div style="height:1vh">
+								<!-- filler div -->
+							</div>
+							<div id="status"></div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</main>
+	<div class="row">
+		<div id="models" class="small-nav col-lg-10 col-md-1 col-sm-1 col-xsm-1" style="padding:14px; cursor:pointer;">
+		</div>
+		<div id="confirmationMsg" class="small-nav col-lg-10 col-md-1 col-sm-1 col-xsm-1"
+			style="padding:14px; cursor:pointer;"></div>
+	</div>
+	<script>
+
+		let modalx = new Modal();
+		$("#ButtonRegister").on("click", function () {
+			let nodes = document.querySelectorAll(".registrationForm");
+			let docx = new DocForm();
+			let missingVals = docx.ValidationFieldsAll(nodes);
+			if (missingVals == false) {
+				// Check for valid email
+				let missingVal = docx.ValidationFieldByCharacter("email", "@");
+				if (missingVal == false) {
+
+					let company = new Company();
+					let registrationPromise = company.Registration($("#businessName").val()).then(res => { localStorage.setItem("orgID", res); });
+					let constants = new Constants();
+					let orgID = constants.orgID;
+
+					adminName = $("#adminName").val();
+					email = $("#email").val();
+					pass = $("#pass").val();
+
+					let userModel = {};
+					userModel.name = adminName;
+					userModel.login = email;
+					userModel.pass = pass;
+					userModel.orgID = orgID;
+					userModel.userType = 3; // Type 3 is Manager, but may want to use a string instead (in case table is rebuilt)
+
+					let userx = new User();
+					let userPromise = userx.CreateUser(userModel).then(res => { localStorage.setItem("userID", res); });
+					let userID = constants.userID;
+
+					let login = new Login(email, pass);
+					let loginPromise = login.GetUserByCredentials().then(res => {
+
+						// Login new registered user
+
+						if (res[0].userType == 1) {
+							window.location.href = "Contracts/SalesRepPage.html";
+						}
+						if (res[0].userType == 2) {
+							window.location.href = "Contracts/CoordinatorPage.html";
+						}
+						if (res[0].userType == 3) {
+							window.location.href = "Contracts/ManagerPage.html";
+						}
+
+					});
+
+
+				}
+			}
+		});
+
+		confirmMsgExit = () => {
+			$('#modalDialog0').modal('toggle');
+		}	
+	</script>
+
+</body>
+
+</html>

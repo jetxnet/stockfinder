@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Stock Quote Finder</title>
+	<meta name="description" content="Search for stock quotes">
+
+	<!-- Stylesheet -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+		integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="../styles/app.css?id=4" rel="stylesheet" type="text/css">
+
+	<!-- JQuery -->
+	<script src="../js/jquery-2.1.4.min.js"></script>
+	<script src="../js/jquery-ui.js"></script>
+
+	<!-- JS Libs -->
+	<script src="../components/Constants.js?id=8"></script>
+	<script src="../components/Stock.js?v=21"></script>
+	<script src="../components/Modal.js?v=5"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+		integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+		crossorigin="anonymous"></script>
+	<script src="../js/components.js"></script>
+
+</head>
+
+<body>
+	<div>
+		<table>
+			<tr>
+				<td style="text-align:center">
+					<header>
+						<h1>Stock Quote Finder</h1>
+					</header>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<main>
+		<div class="col-md-12">
+			<button id="ButtonFavorites" type="button" class="btn btn-primary btn-sm"><span class=""></span> My
+				Favorites</button>
+		</div>
+		<div class="col-md-12">
+			<input id="searchTextBox" placeholder="Enter stock symbol(s) i.e. MSFT,GOOG" type="text">
+			<button id="ButtonSearch" type="submit" class="searchIcon"><span style="vertical-align:bottom"
+					class="searchIcon glyphicon glyphicon-search"></span></button>
+			<div id="status"></div>
+		</div>
+
+		<div class="col-md-12">
+			<div id="mainBoxMiddle" class="mainBoxMiddle ScrollStyle"></div>
+		</div>
+		<div class="row">
+			<div id="modalFavorite" class="small-nav col-lg-10 col-md-1 col-sm-1 col-xsm-1"
+				style="padding:14px; cursor:pointer;"></div>
+		</div>
+	</main>
+	<script>
+		// Normally these user actions would be handled in the component, but because you cannot import classes and call them directly (without common.js or a framework)
+		// then you first have to make a handler call here and then the component
+
+		search = (stockFavorites = "", displayView = true) => {
+			/* The mainBoxMiddle div could be populated by an Ember or Angular component template 
+			   The ajax call could be placed into a component or service 
+			   Models could be placed into a models folder */
+			let stock = new Stock();
+			searchQuery = "";
+			if (stockFavorites != "" && displayView == true) {
+				searchQuery = stockFavorites; // return favorites when clicking 'My Favorites' button
+			} else {
+				searchQuery = $("#searchTextBox").val().replace(/\s/g, ''); // remove spaces after commas (api does not accept)
+			}
+
+			if (searchQuery) {
+				let searchTemplate = "";
+				let stockSearchPromise = stock.Search(searchQuery).then(res => {
+					// Get favorites to filter against search list
+					getFavorites(false); // Do not show the favorites, only using them for filtering in this context
+					stockFavorites = favoriteStocks.split(','); // convert comma string to array
+					// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
+					for (const item of res) {
+						searchTemplate += `<div class='card'>
+												Symbol: ${item.symbol}<br>
+												Name: ${item.name}<br>
+												High: ${item.high}<br>
+												Low: ${item.low}<br>
+												Open: ${item.open}<br>
+												LastPrice: ${item.lastPrice}<br>
+												PercentChange: ${item.percentChange}<br>`
+						if (!stockFavorites.includes(item.symbol)) {
+							searchTemplate += `<a id="${item.symbol}" onclick="initAddFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-plus-sign"></span> Favorite</button></a>`
+						} else {
+							searchTemplate += `<a id="${item.symbol}" onclick="initEditFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog"><button type="button" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-plus-sign"></span> Favorite</button></a>`
+						}
+						searchTemplate += `</div>`;
+					}
+					if (displayView == true) {
+						$(".mainBoxMiddle").html(searchTemplate);
+					}
+				});
+			}
+		}
+
+		getFavoriteStockSymbols = () => {
+			return stockSymbols;
+		}
+
+		getFavorites = (displayView = true) => {
+			let stock = new Stock();
+			let stockFavoritesPromise = stock.ListFavorites().then(res => {
+				// create a list of stock symbols as string delmited values and pass to search function
+				let stockSymbols = "";
+				let trailingComma = ",";
+				let x = 0;
+				for (const item of res) {
+					if (x == res.length - 1) {
+						trailingComma = "";
+					}
+					x++;
+					stockSymbols += item.stockSymbol += trailingComma;
+				}
+				search(stockSymbols);
+			})
+		}
+
+		initAddFavorite = (stockSymbol) => {
+			let modal = new Modal();
+			modalHTML = modal.AddFavorite(stockSymbol);
+			modalObject = {
+				backgroundColor: "background:white",
+				targetElement: "#modalAddFavorite",
+				title: "Add Favorite",
+				id: "addFavoriteDialog",
+				content: modalHTML,
+				modalCSS: "height:30vw;",
+				modalIcon: ""
+			};
+			modalDialogComponent(modalObject);
+		}
+
+		addFavorite = (stockSymbol) => {
+			$(`#${stockSymbol}`).hide();
+			let constants = new Constants();
+			let userID = constants.userID;
+			let comment = $('#favoriteComment').val();
+			let stockFavoriteModel = { stockSymbol, comment, userID };
+			let stock = new Stock();
+			stock.AddFavorite(stockFavoriteModel);
+			$('#addFavoriteDialog').modal('toggle');
+		}
+
+		initEditFavorite = (stockSymbol) => {
+			let modal = new Modal();
+			modalHTML = modal.EditFavorite(stockSymbol);
+			modalObject = {
+				backgroundColor: "background:white",
+				targetElement: "#modalAddFavorite",
+				title: "Edit Favorite",
+				id: "editFavoriteDialog",
+				content: modalHTML,
+				modalCSS: "height:30vw;",
+				modalIcon: ""
+			};
+			modalDialogComponent(modalObject);
+		}
+
+		editFavorite = (stockSymbol) => {
+			let constants = new Constants();
+			let userID = constants.userID;
+			let comment = $('#favoriteComment').val();
+			let stockFavoriteModel = { stockSymbol, comment, userID };
+			let stock = new Stock();
+			// Could first get the id of the favorite and then update by the id. There should be little if any performance cost by doing a lookup with 
+			// userID and stock symbol (we already have these). In essence, this acts like a composite key in relational db terminology.
+			stock.EditFavorite(stockFavoriteModel);
+			$('#addFavoriteDialog').modal('toggle');
+		}
+
+		$("#ButtonSearch").on("click", function () {
+			search();
+		});
+
+		$("#ButtonFavorites").on("click", function () {
+			getFavorites();
+		});
+
+		var input = document.getElementById("searchTextBox");
+		input.addEventListener("keyup", function (event) {
+			event.preventDefault();
+			if (event.keyCode === 13) {
+				search();
+			}
+		});
+
+	</script>
+</body>
+
+</html>
