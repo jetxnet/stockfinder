@@ -3,7 +3,7 @@ class Modal {
 
   }
 
-  AddFavorite(stockSymbol) {
+  AddFavorite(stockID, stockSymbol) {
         var modalHTML = "<div class='body_text'>Enter a comment or description below for this favorite</div>"
 					modalHTML += '<fieldset>'
 						modalHTML += '<table width="100%">'
@@ -27,7 +27,7 @@ class Modal {
 							modalHTML += '<tr>'
 								modalHTML += '<td></td>'
 								modalHTML += '<td>'
-									modalHTML += `<button type="submit" onclick="JavaScript: addFavorite('${stockSymbol}');" style="margin:auto; background-color:rgba(47,73,171,.8); color:rgba(243,230,164,1)" class="btn btn-default">Save<span style="margin-left:4px" aria-hidden="true" class="icon-angle-right"></span></button>`
+									modalHTML += `<button type="submit" onclick="JavaScript: addFavorite('${stockID}');" style="margin:auto; background-color:rgba(47,73,171,.8); color:rgba(243,230,164,1)" class="btn btn-default">Save<span style="margin-left:4px" aria-hidden="true" class="icon-angle-right"></span></button>`
 								modalHTML += '</td>'
 							modalHTML += '</tr>'
 							modalHTML += '<tr>'
@@ -38,7 +38,7 @@ class Modal {
 		return modalHTML;
   }
 
-  EditFavorite(stockSymbol) {
+  EditFavorite(stockID) {
 	var modalHTML = "<div class='body_text'>Update your comment for this favorite</div>"
 				modalHTML += '<fieldset>'
 					modalHTML += '<table width="100%">'
@@ -48,7 +48,7 @@ class Modal {
 								modalHTML += ''
 							modalHTML += '</td>'
 							modalHTML += '<td>'
-								modalHTML += `${stockSymbol}`
+								modalHTML += `${stockID}`
 							modalHTML += '</td>'
 						modalHTML += '</tr>'						
 						modalHTML += '<tr>'
@@ -62,7 +62,7 @@ class Modal {
 						modalHTML += '<tr>'
 							modalHTML += '<td></td>'
 							modalHTML += '<td>'
-								modalHTML += `<button type="submit" onclick="JavaScript: editFavorite('${stockSymbol}');" style="margin:auto; background-color:rgba(47,73,171,.8); color:rgba(243,230,164,1)" class="btn btn-default">Save<span style="margin-left:4px" aria-hidden="true" class="icon-angle-right"></span></button>`
+								modalHTML += `<button type="submit" onclick="JavaScript: editFavorite('${stockID}');" style="margin:auto; background-color:rgba(47,73,171,.8); color:rgba(243,230,164,1)" class="btn btn-default">Save<span style="margin-left:4px" aria-hidden="true" class="icon-angle-right"></span></button>`
 							modalHTML += '</td>'
 						modalHTML += '</tr>'
 						modalHTML += '<tr>'

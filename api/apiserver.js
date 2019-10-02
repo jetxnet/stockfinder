@@ -72,7 +72,14 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 					stockModel.percentChange = item.percentChange;
 					stockModel.isFavorite = false;
 					stockModelList.push(stockModel);				 
-				}
+
+					let id = item._id;
+					// Normally this a lookup or a SQL Join if in a db
+					if (q.includes(id)) {
+						catFactModel.isFavorite = true;
+					}
+					catFactModelList.push(catFactModel);
+				}			
 				res.json(stockModelList);
 			},
 			error: function (response) {

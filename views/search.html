@@ -48,7 +48,7 @@
 				Favorites</button>
 		</div>
 		<div class="col-md-12">
-			<input id="searchTextBox" placeholder="Enter stock symbol(s) i.e. MSFT,GOOG" type="text">
+			<input id="searchTextBox" placeholder="Enter stock ID(s) i.e. MSFT,GOOG" type="text">
 			<button id="ButtonSearch" type="submit" class="searchIcon"><span style="vertical-align:bottom"
 					class="searchIcon glyphicon glyphicon-search"></span></button>
 			<div id="status"></div>
@@ -66,57 +66,68 @@
 		// Normally these user actions would be handled in the component, but because you cannot import classes and call them directly (without common.js or a framework)
 		// then you first have to make a handler call here and then the component
 
-		search = (stockFavorites = "", displayView = true) => {
-			/* The mainBoxMiddle div could be populated by an Ember or Angular component template 
-			   The ajax call could be placed into a component or service 
-			   Models could be placed into a models folder */
-			let stock = new Stock();
-			searchQuery = "";
-			if (stockFavorites != "" && displayView == true) {
-				searchQuery = stockFavorites; // return favorites when clicking 'My Favorites' button
-			} else {
-				searchQuery = $("#searchTextBox").val().replace(/\s/g, ''); // remove spaces after commas (api does not accept)
-			}
-
+		displayResults = (searchQuery) => {
 			if (searchQuery) {
+				let stock = new Stock();
 				let searchTemplate = "";
-				let stockSearchPromise = stock.Search(searchQuery).then(res => {
-					// Get favorites to filter against search list
-					getFavorites(false); // Do not show the favorites, only using them for filtering in this context
-					stockFavorites = favoriteStocks.split(','); // convert comma string to array
-					// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
-					for (const item of res) {
-						searchTemplate += `<div class='card'>
-												Symbol: ${item.symbol}<br>
+				let stockSearchPromise = stock.Search(searchQuery).then(resSearch => {
+
+					let stockFavoritesPromise = stock.ListFavorites().then(resFavorites => {
+						// // create a list of stock IDs as string delmited values and pass to search function
+						// let stockIDs = "";
+						// let trailingComma = ",";
+						// let x = 0;
+						// for (const item of resFavorites) {
+						// 	if (x == resFavorites.length - 1) {
+						// 		trailingComma = ""; 	
+						// 	}
+						// 	x++;
+						// 	stockIDs += item.stockID += trailingComma;
+						// }
+						// searchQuery = stockIDs; // return favorites when clicking 'My Favorites' button
+
+						// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
+						for (const item of resSearch) {
+							searchTemplate += `<div class='card'>
+												ID: ${item.ID}<br>
 												Name: ${item.name}<br>
 												High: ${item.high}<br>
 												Low: ${item.low}<br>
 												Open: ${item.open}<br>
 												LastPrice: ${item.lastPrice}<br>
 												PercentChange: ${item.percentChange}<br>`
-						if (!stockFavorites.includes(item.symbol)) {
-							searchTemplate += `<a id="${item.symbol}" onclick="initAddFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-plus-sign"></span> Favorite</button></a>`
-						} else {
-							searchTemplate += `<a id="${item.symbol}" onclick="initEditFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog"><button type="button" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-plus-sign"></span> Favorite</button></a>`
+							if (item.IsFavorite == true) {
+								searchTemplate += `<a id="${item.stockID}" onclick="initEditFavorite('${item.stockID}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog"><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit Favorite</button></a>`
+							} else {
+								searchTemplate += `<a style="padding:top:10px" id="${item.stockID}" onclick="initAddFavorite('${item.stockID}', '${item.stockSymbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
+							}
+							searchTemplate += `</div>`;
 						}
-						searchTemplate += `</div>`;
-					}
-					if (displayView == true) {
-						$(".mainBoxMiddle").html(searchTemplate);
-					}
-				});
+						/* The mainBoxMiddle div could be populated by an Ember or Angular component template 
+  						   The ajax call could be placed into a component or service 
+						   Models could be placed into a models folder */
+						if (searchTemplate != "") {
+							$(".mainBoxMiddle").html(searchTemplate);
+						} else {
+							$(".mainBoxMiddle").html("Your query returned no results, please try another search.");					
+						}
+					});
+
+				})
 			}
 		}
 
-		getFavoriteStockSymbols = () => {
-			return stockSymbols;
+		search = () => {
+			// Could do some search string validation here if needed
+			searchQuery = $("#searchTextBox").val().replace(/\s/g, ''); // remove spaces after commas (api does not accept)
+			displayResults(searchQuery);
 		}
 
-		getFavorites = (displayView = true) => {
+		getFavorites = () => {
 			let stock = new Stock();
 			let stockFavoritesPromise = stock.ListFavorites().then(res => {
-				// create a list of stock symbols as string delmited values and pass to search function
-				let stockSymbols = "";
+				// create a list of stock IDs as string delmited values and pass to search function
+				let stockIDs = "";
 				let trailingComma = ",";
 				let x = 0;
 				for (const item of res) {
@@ -124,18 +135,19 @@
 						trailingComma = "";
 					}
 					x++;
-					stockSymbols += item.stockSymbol += trailingComma;
+					stockIDs += item.stockID += trailingComma;
 				}
-				search(stockSymbols);
+				searchQuery = stockIDs; // return favorites when clicking 'My Favorites' button
+				displayResults(searchQuery);
 			})
 		}
 
-		initAddFavorite = (stockSymbol) => {
+		initAddFavorite = (stockID, stockSymbol) => {
 			let modal = new Modal();
-			modalHTML = modal.AddFavorite(stockSymbol);
+			modalHTML = modal.AddFavorite(stockID, stockSymbol);
 			modalObject = {
 				backgroundColor: "background:white",
-				targetElement: "#modalAddFavorite",
+				targetElement: "#modalFavorite",
 				title: "Add Favorite",
 				id: "addFavoriteDialog",
 				content: modalHTML,
@@ -145,23 +157,23 @@
 			modalDialogComponent(modalObject);
 		}
 
-		addFavorite = (stockSymbol) => {
-			$(`#${stockSymbol}`).hide();
+		addFavorite = (stockID) => {
+			$(`#${stockID}`).hide();
 			let constants = new Constants();
 			let userID = constants.userID;
 			let comment = $('#favoriteComment').val();
-			let stockFavoriteModel = { stockSymbol, comment, userID };
+			let stockFavoriteModel = { stockID, comment, userID };
 			let stock = new Stock();
 			stock.AddFavorite(stockFavoriteModel);
 			$('#addFavoriteDialog').modal('toggle');
 		}
 
-		initEditFavorite = (stockSymbol) => {
+		initEditFavorite = (stockID) => {
 			let modal = new Modal();
-			modalHTML = modal.EditFavorite(stockSymbol);
+			modalHTML = modal.EditFavorite(stockID);
 			modalObject = {
 				backgroundColor: "background:white",
-				targetElement: "#modalAddFavorite",
+				targetElement: "#modalFavorite",
 				title: "Edit Favorite",
 				id: "editFavoriteDialog",
 				content: modalHTML,
@@ -171,14 +183,14 @@
 			modalDialogComponent(modalObject);
 		}
 
-		editFavorite = (stockSymbol) => {
+		editFavorite = (stockID) => {
 			let constants = new Constants();
 			let userID = constants.userID;
 			let comment = $('#favoriteComment').val();
-			let stockFavoriteModel = { stockSymbol, comment, userID };
+			let stockFavoriteModel = { stockID, comment, userID };
 			let stock = new Stock();
 			// Could first get the id of the favorite and then update by the id. There should be little if any performance cost by doing a lookup with 
-			// userID and stock symbol (we already have these). In essence, this acts like a composite key in relational db terminology.
+			// userID and stock ID (we already have these). In essence, this acts like a composite key in relational db terminology.
 			stock.EditFavorite(stockFavoriteModel);
 			$('#addFavoriteDialog').modal('toggle');
 		}
