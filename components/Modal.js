@@ -38,9 +38,10 @@ class Modal {
 		return modalHTML;
 	}
 
-	EditFavorite(stockSymbol) {
+	EditFavorite() {
 
 		let favoriteComment = sessionStorage.getItem('favoriteComment');
+		let stockSymbol = sessionStorage.getItem('stockSymbol');
 
 		var modalHTML = "<div class='body_text'>Update your comment for this favorite</div>"
 		modalHTML += '<fieldset>'

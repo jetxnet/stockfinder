@@ -87,7 +87,7 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 		const userID = req.params.userID;
 		const stockSymbol = req.params.stockSymbol;
 		let favorites = db.collection('favorites', function (err, collection) { });
-		favorites.findOne({ userID: userID, stockSymbol: stockSymbol  }, function (err, item) {
+		favorites.findOne({ userID: userID, stockSymbol: stockSymbol }, function (err, item) {
 			if (err) {
 				console.log(error);
 			} else {
@@ -98,8 +98,9 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 				}
 			}
 		})
-	})	
-	
+	})
+
+	// Create stock favorite
 	app.post("/addstockfavorite", function (req, res) {
 		let item = req.body;
 		db.collection("favorites").insertOne(item, function (err, res) {
@@ -111,8 +112,8 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 		})
 	})
 
+	// Edit stock favorite
 	app.post("/editstockfavorite", function (req, res) {
-		let item = req.body;
 		db.collection("favorites").update({ stockSymbol: req.body.stockSymbol, userID: req.body.userID }, { $set: { comment: req.body.comment } }, function (err, res) {
 			if (err) {
 				console.log(err);
@@ -122,7 +123,7 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 		})
 	})
 
-
+	// Remove stock favorite
 	app.post("/removestockfavorite", function (req, res) {
 		let item = req.body;
 		db.collection("favorites").remove({ stockSymbol: req.body.stockSymbol, userID: req.body.userID }, function (err, res) {
@@ -132,8 +133,9 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 				console.log("1 favorite record removed");
 			}
 		})
-	})	
+	})
 
+	// Read (List) stock favorites
 	app.get("/stocklistfavorites/:userID", function (req, res) {
 		const userID = req.params.userID;
 		db.collection('favorites').find({ userID: userID }).toArray((err, items) => {

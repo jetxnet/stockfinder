@@ -12,16 +12,16 @@
 	<!-- Stylesheet -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
 		integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-	<link href="../styles/app.css?id=4" rel="stylesheet" type="text/css">
+	<link href="../styles/app.css?id=6" rel="stylesheet" type="text/css">
 
 	<!-- JQuery -->
 	<script src="../js/jquery-2.1.4.min.js"></script>
 	<script src="../js/jquery-ui.js"></script>
 
 	<!-- JS Libs -->
-	<script src="../components/Constants.js?id=9"></script>
-	<script src="../components/Stock.js?v=5"></script>
-	<script src="../components/Modal.js?v=7"></script>
+	<script src="../components/Constants.js"></script>
+	<script src="../components/Stock.js"></script>
+	<script src="../components/Modal.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
 		integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
 		crossorigin="anonymous"></script>
@@ -65,7 +65,7 @@
 	<script>
 
 		// If not logged in, kick back to main (simple forms authentication), normally handled by a login service. For purposes of this demo, only a few strings are using
-		// local session storage. 
+		// local session storage. You can also use a wrapper like storage.js.
 		if (localStorage.getItem("userID") == null) {
 			window.location.href = "../index.html"; // login screen for this app
 		}
@@ -78,24 +78,24 @@
 				let stock = new Stock();
 				let searchTemplate = "";
 				let stockSearchPromise = stock.Search(searchQuery).then(resSearch => {
-
+					let stockFavoritesList = []; // Object array to store favorites  
 					let stockFavoritesPromise = stock.ListFavorites().then(resFavorites => {
 						// create a list of stock IDs as string delmited values and pass to search function
 						let stockSymbols = "";
 						let trailingComma = ",";
 						let x = 0;
 						for (const item of resFavorites) {
-							if (x == resFavorites.length - 1) {
-								trailingComma = "";
-							}
+							stockFavoritesList.push(item);
+							if (x == resFavorites.length - 1) { trailingComma = ""; }
 							x++;
 							stockSymbols += item.stockSymbol += trailingComma;
+
 						}
 						searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
 
 						// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
 						for (const item of resSearch) {
-							searchTemplate += `<div class='card'>
+							searchTemplate += `<div class=''>
 												Name: ${item.name}<br>
 												High: ${item.high}<br>
 												Low: ${item.low}<br>
@@ -103,15 +103,21 @@
 												LastPrice: ${item.lastPrice}<br>
 												PercentChange: ${item.percentChange}<br>`
 							if (searchQuery.includes(item.symbol)) {
-								searchTemplate += `<a id="${item.symbol}" onclick="initEditFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog"><button type="button" style="margin-top:10px; margin-right:5px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-trash"></span> Delete</button></a>`
+								for (const stockItem of stockFavoritesList) {
+									if (stockItem.stockSymbol.replace(",", "") == item.symbol) {
+										searchTemplate += `<p><span style="font-weight:bold">Comment:</span> ${stockItem.comment}</p>`
+									}
+								}
+								searchTemplate += `<a id="${item.symbol}" onclick="initEditFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog">
+													<button type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
+													<button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-trash"></span> Delete</button></a>`
 							} else {
-								searchTemplate += `<a style="padding:top:10px" id="${item.symbol}" onclick="initAddFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
+								searchTemplate += `<a style="padding:top:10px" id="${item.symbol}" onclick="initAddFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
 							}
-							searchTemplate += `</div>`;
+							searchTemplate += `</div><hr>`;
 						}
 						/* The mainBoxMiddle div could be populated by an Ember or Angular component template 
-  						   The ajax call could be placed into a component or service 
-						   Models could be placed into a models folder */
+  						   The ajax call could be placed into a component or service. Models could be placed into a models folder */
 						if (searchTemplate != "") {
 							$(".mainBoxMiddle").html(searchTemplate);
 						} else {
@@ -133,18 +139,21 @@
 			let stock = new Stock();
 			let stockFavoritesPromise = stock.ListFavorites().then(res => {
 				// create a list of stock IDs as string delmited values and pass to search function
-				let stockSymbols = "";
-				let trailingComma = ",";
-				let x = 0;
-				for (const item of res) {
-					if (x == res.length - 1) {
-						trailingComma = "";
+				console.log(res);
+				if (res.length > 0) {
+					let stockSymbols = "";
+					let trailingComma = ",";
+					let x = 0;
+					for (const item of res) {
+						if (x == res.length - 1) { trailingComma = "";	}
+						x++;
+						stockSymbols += item.stockSymbol += trailingComma;
 					}
-					x++;
-					stockSymbols += item.stockSymbol += trailingComma;
+					searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
+					displayResults(searchQuery);
+				} else {
+					$("#mainBoxMiddle").html("Unable to find any favorites. Try searching and adding new favorites.");
 				}
-				searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
-				displayResults(searchQuery);
 			})
 		}
 
@@ -171,6 +180,7 @@
 			let stockFavoriteModel = { stockSymbol, comment, userID };
 			let stock = new Stock();
 			stock.AddFavorite(stockFavoriteModel);
+			getFavorites();
 			statusMessage("Add");
 			$('#addFavoriteDialog').modal('toggle');
 		}
@@ -180,27 +190,15 @@
 			let stockFavoritesPromise = stock.GetFavorite(stockSymbol).then(res => {
 				let stockSymbol = res.stockSymbol;
 				let comment = res.comment;
-				let userID = res.userID;
-				let stockFavoriteModel = { stockSymbol, comment, userID };
+
 				/*Not a big fan of session in other languages but JS session you have more control over. I normally wouldn't use in JS
 				  but with modals is much easier for passing vals with a promise. Without that, the promise cannot pass directly to or initialize
 				  the modal, not even through a callback. But, you don't have to use modals though. Frameworks could handle this through a custom servce.*/
 				sessionStorage.removeItem('favoriteComment'); // clear from memory
+				sessionStorage.removeItem('stockSymbol');
 				sessionStorage.setItem('favoriteComment', comment);
+				sessionStorage.setItem('stockSymbol', stockSymbol);
 			})
-
-			let modal = new Modal();
-			modalHTML = modal.EditFavorite(stockSymbol);
-			modalObject = {
-				backgroundColor: "background:white",
-				targetElement: "#modalFavorite",
-				title: "Edit Favorite",
-				id: "editFavoriteDialog",
-				content: modalHTML,
-				modalCSS: "height:30vw;",
-				modalIcon: ""
-			};
-			modalDialogComponent(modalObject);
 		}
 
 		editFavorite = (stockSymbol) => {
@@ -212,8 +210,20 @@
 			// This api has no ids for the stocks so since not storing them in db, will do a lookup with 
 			// userID and stock ID (we already have these). In essence, this acts like a composite key in relational db terminology.
 			stock.EditFavorite(stockFavoriteModel);
+			getFavorites();
 			statusMessage("Edit");
-			$('#addFavoriteDialog').modal('toggle');
+			$('#editFavoriteDialog').modal('toggle');
+		}
+
+		removeFavorite = (stockSymbol) => {
+			let constants = new Constants();
+			let userID = constants.userID;
+			let comment = "";
+			let stockFavoriteModel = { stockSymbol, comment, userID };
+			let stock = new Stock();
+			stock.RemoveFavorite(stockFavoriteModel);
+			getFavorites();
+			statusMessage("Delete");
 		}
 
 		$("#ButtonSearch").on("click", function () {
@@ -224,12 +234,29 @@
 			getFavorites();
 		});
 
+		let modal = new Modal();
+		modalHTML = modal.EditFavorite();
+		modalObject = {
+			backgroundColor: "background:white",
+			targetElement: "#modalFavorite",
+			title: "Edit Favorite",
+			id: "editFavoriteDialog",
+			content: modalHTML,
+			modalCSS: "height:30vw;",
+			modalIcon: ""
+		};
+		modalDialogComponent(modalObject);
+
 		statusMessage = (msgType) => {
+			// Could change to switch statement when adding more cases
 			if ((msgType) == "Add") {
 				$("#status").html("Added successfully!")
 			}
 			if ((msgType) == "Edit") {
 				$("#status").html("Updated successfully!")
+			}
+			if ((msgType) == "Delete") {
+				$("#status").html("Removed successfully!")
 			}
 			setTimeout(function () { $("#status").html("") }, 5000); // clear message after 5 secs
 		}
@@ -241,11 +268,6 @@
 				search();
 			}
 		});
-
-		$(document).ready(function () {
-
-		});
-
 
 	</script>
 </body>

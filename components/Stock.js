@@ -189,7 +189,7 @@ class Stock {
 							var resObj = JSON.parse(res);
 
 							if (resObj === 'fail') {
-								$("#status").html("Unable to fetch favorite data at this time.");
+								$("#mainBoxMidlle").html("Unable to fetch favorite data at this time.");
 								setTimeout(function(){ $("#status").html("") }, 5000); // clear message after 5 secs
 							} else {								
 								resolve(resObj);

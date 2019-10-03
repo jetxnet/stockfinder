@@ -462,7 +462,7 @@ footer section,main{
 }
 p{
     margin-top:0;
-    margin-bottom:32px
+    margin-bottom:10px
 }
 a{
     color:#fc0f69;
@@ -625,9 +625,9 @@ header{
     background-color:#3949AB;
     box-sizing:border-box;
     padding:64px 40px;
-	  margin: auto;
+	margin: auto;
     color:white;
-	  height: 32vh;
+	height: 40vh;
     border-radius: 25px;	
 }
 
@@ -981,7 +981,7 @@ select:active, select:hover {
   display: flex;                /* Children use Flexbox */
   flex-direction: column;       /* Rotate Axis */
   padding: 10px;
-  height:200px;
+  height:auto;
   margin-bottom:2px;
 }
 
