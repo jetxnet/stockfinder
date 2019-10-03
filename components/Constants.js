@@ -11,6 +11,8 @@ class Constants {
   get apiPathStockAddFavorite() { return this.apiRoot + 'addstockfavorite';  }
   get apiPathStockEditFavorite() { return this.apiRoot + 'editstockfavorite';  }
   get apiPathStockListFavorites() { return this.apiRoot + 'stocklistfavorites';  }
+  get apiPathStockGetFavorite() { return this.apiRoot + 'getstockfavorite';  }
+  get apiPathStockRemoveFavorite() { return this.apiRoot + 'removestockfavorite';  }
   get userID() { return localStorage.getItem("userID") };
 
 

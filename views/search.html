@@ -19,9 +19,9 @@
 	<script src="../js/jquery-ui.js"></script>
 
 	<!-- JS Libs -->
-	<script src="../components/Constants.js?id=8"></script>
-	<script src="../components/Stock.js?v=21"></script>
-	<script src="../components/Modal.js?v=5"></script>
+	<script src="../components/Constants.js?id=9"></script>
+	<script src="../components/Stock.js?v=5"></script>
+	<script src="../components/Modal.js?v=7"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
 		integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
 		crossorigin="anonymous"></script>
@@ -63,6 +63,13 @@
 		</div>
 	</main>
 	<script>
+
+		// If not logged in, kick back to main (simple forms authentication), normally handled by a login service. For purposes of this demo, only a few strings are using
+		// local session storage. 
+		if (localStorage.getItem("userID") == null) {
+			window.location.href = "../index.html"; // login screen for this app
+		}
+
 		// Normally these user actions would be handled in the component, but because you cannot import classes and call them directly (without common.js or a framework)
 		// then you first have to make a handler call here and then the component
 
@@ -73,33 +80,32 @@
 				let stockSearchPromise = stock.Search(searchQuery).then(resSearch => {
 
 					let stockFavoritesPromise = stock.ListFavorites().then(resFavorites => {
-						// // create a list of stock IDs as string delmited values and pass to search function
-						// let stockIDs = "";
-						// let trailingComma = ",";
-						// let x = 0;
-						// for (const item of resFavorites) {
-						// 	if (x == resFavorites.length - 1) {
-						// 		trailingComma = ""; 	
-						// 	}
-						// 	x++;
-						// 	stockIDs += item.stockID += trailingComma;
-						// }
-						// searchQuery = stockIDs; // return favorites when clicking 'My Favorites' button
+						// create a list of stock IDs as string delmited values and pass to search function
+						let stockSymbols = "";
+						let trailingComma = ",";
+						let x = 0;
+						for (const item of resFavorites) {
+							if (x == resFavorites.length - 1) {
+								trailingComma = "";
+							}
+							x++;
+							stockSymbols += item.stockSymbol += trailingComma;
+						}
+						searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
 
 						// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
 						for (const item of resSearch) {
 							searchTemplate += `<div class='card'>
-												ID: ${item.ID}<br>
 												Name: ${item.name}<br>
 												High: ${item.high}<br>
 												Low: ${item.low}<br>
 												Open: ${item.open}<br>
 												LastPrice: ${item.lastPrice}<br>
 												PercentChange: ${item.percentChange}<br>`
-							if (item.IsFavorite == true) {
-								searchTemplate += `<a id="${item.stockID}" onclick="initEditFavorite('${item.stockID}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog"><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit Favorite</button></a>`
+							if (searchQuery.includes(item.symbol)) {
+								searchTemplate += `<a id="${item.symbol}" onclick="initEditFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog"><button type="button" style="margin-top:10px; margin-right:5px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-trash"></span> Delete</button></a>`
 							} else {
-								searchTemplate += `<a style="padding:top:10px" id="${item.stockID}" onclick="initAddFavorite('${item.stockID}', '${item.stockSymbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
+								searchTemplate += `<a style="padding:top:10px" id="${item.symbol}" onclick="initAddFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" style="margin-top:10px" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
 							}
 							searchTemplate += `</div>`;
 						}
@@ -109,7 +115,7 @@
 						if (searchTemplate != "") {
 							$(".mainBoxMiddle").html(searchTemplate);
 						} else {
-							$(".mainBoxMiddle").html("Your query returned no results, please try another search.");					
+							$(".mainBoxMiddle").html("Your query returned no results, please try another search.");
 						}
 					});
 
@@ -127,7 +133,7 @@
 			let stock = new Stock();
 			let stockFavoritesPromise = stock.ListFavorites().then(res => {
 				// create a list of stock IDs as string delmited values and pass to search function
-				let stockIDs = "";
+				let stockSymbols = "";
 				let trailingComma = ",";
 				let x = 0;
 				for (const item of res) {
@@ -135,16 +141,16 @@
 						trailingComma = "";
 					}
 					x++;
-					stockIDs += item.stockID += trailingComma;
+					stockSymbols += item.stockSymbol += trailingComma;
 				}
-				searchQuery = stockIDs; // return favorites when clicking 'My Favorites' button
+				searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
 				displayResults(searchQuery);
 			})
 		}
 
-		initAddFavorite = (stockID, stockSymbol) => {
+		initAddFavorite = (stockSymbol) => {
 			let modal = new Modal();
-			modalHTML = modal.AddFavorite(stockID, stockSymbol);
+			modalHTML = modal.AddFavorite(stockSymbol);
 			modalObject = {
 				backgroundColor: "background:white",
 				targetElement: "#modalFavorite",
@@ -157,20 +163,34 @@
 			modalDialogComponent(modalObject);
 		}
 
-		addFavorite = (stockID) => {
-			$(`#${stockID}`).hide();
+		addFavorite = (stockSymbol) => {
+			$(`#${stockSymbol}`).hide();
 			let constants = new Constants();
 			let userID = constants.userID;
 			let comment = $('#favoriteComment').val();
-			let stockFavoriteModel = { stockID, comment, userID };
+			let stockFavoriteModel = { stockSymbol, comment, userID };
 			let stock = new Stock();
 			stock.AddFavorite(stockFavoriteModel);
+			statusMessage("Add");
 			$('#addFavoriteDialog').modal('toggle');
 		}
 
-		initEditFavorite = (stockID) => {
+		initEditFavorite = (stockSymbol) => {
+			let stock = new Stock();
+			let stockFavoritesPromise = stock.GetFavorite(stockSymbol).then(res => {
+				let stockSymbol = res.stockSymbol;
+				let comment = res.comment;
+				let userID = res.userID;
+				let stockFavoriteModel = { stockSymbol, comment, userID };
+				/*Not a big fan of session in other languages but JS session you have more control over. I normally wouldn't use in JS
+				  but with modals is much easier for passing vals with a promise. Without that, the promise cannot pass directly to or initialize
+				  the modal, not even through a callback. But, you don't have to use modals though. Frameworks could handle this through a custom servce.*/
+				sessionStorage.removeItem('favoriteComment'); // clear from memory
+				sessionStorage.setItem('favoriteComment', comment);
+			})
+
 			let modal = new Modal();
-			modalHTML = modal.EditFavorite(stockID);
+			modalHTML = modal.EditFavorite(stockSymbol);
 			modalObject = {
 				backgroundColor: "background:white",
 				targetElement: "#modalFavorite",
@@ -183,15 +203,16 @@
 			modalDialogComponent(modalObject);
 		}
 
-		editFavorite = (stockID) => {
+		editFavorite = (stockSymbol) => {
 			let constants = new Constants();
 			let userID = constants.userID;
 			let comment = $('#favoriteComment').val();
-			let stockFavoriteModel = { stockID, comment, userID };
+			let stockFavoriteModel = { stockSymbol, comment, userID };
 			let stock = new Stock();
-			// Could first get the id of the favorite and then update by the id. There should be little if any performance cost by doing a lookup with 
+			// This api has no ids for the stocks so since not storing them in db, will do a lookup with 
 			// userID and stock ID (we already have these). In essence, this acts like a composite key in relational db terminology.
 			stock.EditFavorite(stockFavoriteModel);
+			statusMessage("Edit");
 			$('#addFavoriteDialog').modal('toggle');
 		}
 
@@ -203,6 +224,16 @@
 			getFavorites();
 		});
 
+		statusMessage = (msgType) => {
+			if ((msgType) == "Add") {
+				$("#status").html("Added successfully!")
+			}
+			if ((msgType) == "Edit") {
+				$("#status").html("Updated successfully!")
+			}
+			setTimeout(function () { $("#status").html("") }, 5000); // clear message after 5 secs
+		}
+
 		var input = document.getElementById("searchTextBox");
 		input.addEventListener("keyup", function (event) {
 			event.preventDefault();
@@ -210,6 +241,11 @@
 				search();
 			}
 		});
+
+		$(document).ready(function () {
+
+		});
+
 
 	</script>
 </body>

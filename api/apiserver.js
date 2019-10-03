@@ -61,25 +61,20 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 				let stockModelList = [];
 				let items = response.results;
 				// Downsize the response model and allow for any filtering or data manipulation before returning to client
-				for (const item of items) {
-					stockModel = {};
-					stockModel.symbol= item.symbol;
-					stockModel.name = item.name;
-					stockModel.high = item.high;
-					stockModel.low = item.low;
-					stockModel.open = item.open;
-					stockModel.lastPrice = item.lastPrice;
-					stockModel.percentChange = item.percentChange;
-					stockModel.isFavorite = false;
-					stockModelList.push(stockModel);				 
-
-					let id = item._id;
-					// Normally this a lookup or a SQL Join if in a db
-					if (q.includes(id)) {
-						catFactModel.isFavorite = true;
+				if (items) {
+					for (const item of items) {
+						stockModel = {};
+						stockModel.symbol = item.symbol;
+						stockModel.name = item.name;
+						stockModel.high = item.high;
+						stockModel.low = item.low;
+						stockModel.open = item.open;
+						stockModel.lastPrice = item.lastPrice;
+						stockModel.percentChange = item.percentChange;
+						stockSymbol = item.symbol.toLowerCase();
+						stockModelList.push(stockModel);
 					}
-					catFactModelList.push(catFactModel);
-				}			
+				}
 				res.json(stockModelList);
 			},
 			error: function (response) {
@@ -88,6 +83,23 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 		})
 	})
 
+	app.get("/getstockfavorite/:userID/:stockSymbol", function (req, res) {
+		const userID = req.params.userID;
+		const stockSymbol = req.params.stockSymbol;
+		let favorites = db.collection('favorites', function (err, collection) { });
+		favorites.findOne({ userID: userID, stockSymbol: stockSymbol  }, function (err, item) {
+			if (err) {
+				console.log(error);
+			} else {
+				if (item != null) {
+					res.json(item);
+				} else {
+					res.json('fail');
+				}
+			}
+		})
+	})	
+	
 	app.post("/addstockfavorite", function (req, res) {
 		let item = req.body;
 		db.collection("favorites").insertOne(item, function (err, res) {
@@ -101,19 +113,31 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 
 	app.post("/editstockfavorite", function (req, res) {
 		let item = req.body;
-		db.collection("favorites").update({stockSymbol: req.body.stockSymbol, userID: req.body.userID },{$set: {comment: req.body.comment}}, function(err, res) {
+		db.collection("favorites").update({ stockSymbol: req.body.stockSymbol, userID: req.body.userID }, { $set: { comment: req.body.comment } }, function (err, res) {
 			if (err) {
 				console.log(err);
 			} else {
 				console.log("1 favorite record updated");
 			}
 		})
+	})
+
+
+	app.post("/removestockfavorite", function (req, res) {
+		let item = req.body;
+		db.collection("favorites").remove({ stockSymbol: req.body.stockSymbol, userID: req.body.userID }, function (err, res) {
+			if (err) {
+				console.log(err);
+			} else {
+				console.log("1 favorite record removed");
+			}
+		})
 	})	
 
 	app.get("/stocklistfavorites/:userID", function (req, res) {
 		const userID = req.params.userID;
-		db.collection('favorites').find({userID: userID}).toArray((err, items) => {
-			if (err) { 
+		db.collection('favorites').find({ userID: userID }).toArray((err, items) => {
+			if (err) {
 				console.log(error);
 			} else {
 				if (items != null) {
@@ -123,7 +147,7 @@ MongoClient.connect("mongodb://localhost:27017/stocks", function (err, db) {
 				}
 			}
 		})
-	})	
+	})
 
 	app.listen(3002, function () {
 
