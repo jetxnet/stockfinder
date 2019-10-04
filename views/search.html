@@ -21,14 +21,12 @@
 	<!-- JS Libs -->
 	<script src="../components/Constants.js"></script>
 	<script src="../components/Stock.js"></script>
-	<script src="../components/Modal.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
 		integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
 		crossorigin="anonymous"></script>
 	<script src="../js/components.js"></script>
 
 </head>
-
 <body>
 	<div>
 		<table>
@@ -41,7 +39,6 @@
 			</tr>
 		</table>
 	</div>
-
 	<main>
 		<div class="col-md-12">
 			<button id="ButtonFavorites" type="button" class="btn btn-primary btn-sm"><span class=""></span> My
@@ -58,7 +55,11 @@
 			<div id="mainBoxMiddle" class="mainBoxMiddle ScrollStyle"></div>
 		</div>
 		<div class="row">
-			<div id="modalFavorite" class="small-nav col-lg-10 col-md-1 col-sm-1 col-xsm-1"
+			<div id="modalFavoriteAdd" class="small-nav col-lg-10 col-md-1 col-sm-1 col-xsm-1"
+				style="padding:14px; cursor:pointer;"></div>
+		</div>
+		<div class="row">
+			<div id="modalFavoriteEdit" class="small-nav col-lg-10 col-md-1 col-sm-1 col-xsm-1"
 				style="padding:14px; cursor:pointer;"></div>
 		</div>
 	</main>
@@ -73,14 +74,17 @@
 		// Normally these user actions would be handled in the component, but because you cannot import classes and call them directly (without common.js or a framework)
 		// then you first have to make a handler call here and then the component
 
-		displayResults = (searchQuery) => {
+		displayResults = (searchQuery, edit = false, add = false) => {
+			/* This method could be refactored into 3 different functions - one for List, one for Add and one for Edit. Doing it this way is a little harder to follow but
+			   does save some code. The promise code would have to be repeated for each function including everything within the scope of that promise. This is where frameworks
+			   like Ember or Angular can help using components with services. */
 			if (searchQuery) {
 				let stock = new Stock();
 				let searchTemplate = "";
 				let stockSearchPromise = stock.Search(searchQuery).then(resSearch => {
-					let stockFavoritesList = []; // Object array to store favorites  
+					let stockFavoritesList = []; // Object array to store favorites with comments  
 					let stockFavoritesPromise = stock.ListFavorites().then(resFavorites => {
-						// create a list of stock IDs as string delmited values and pass to search function
+						// create a list of stock IDs to be filtered by search. 
 						let stockSymbols = "";
 						let trailingComma = ",";
 						let x = 0;
@@ -96,6 +100,7 @@
 						// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
 						for (const item of resSearch) {
 							searchTemplate += `<div class=''>
+												StockSymbol: ${item.symbol}<br>
 												Name: ${item.name}<br>
 												High: ${item.high}<br>
 												Low: ${item.low}<br>
@@ -104,15 +109,25 @@
 												PercentChange: ${item.percentChange}<br>`
 							if (searchQuery.includes(item.symbol)) {
 								for (const stockItem of stockFavoritesList) {
-									if (stockItem.stockSymbol.replace(",", "") == item.symbol) {
-										searchTemplate += `<p><span style="font-weight:bold">Comment:</span> ${stockItem.comment}</p>`
+									stockSymbol = stockItem.stockSymbol.replace(",", "");
+									// Show Edit and Delete or Save button based on context
+									if (stockSymbol == item.symbol) {
+										if (edit == false) {
+											searchTemplate += `<div id="editComment-${stockSymbol}"><span style="font-weight:bold">Comment:</span> ${stockItem.comment}</div>
+														 	  <div><button id="" onclick="initEditFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
+														  	  <button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-trash"></span> Delete</button></div>`
+										} else {
+											searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" value="">${stockItem.comment}</textarea><button id="" onclick="editFavorite('${stockSymbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
+										}
 									}
 								}
-								searchTemplate += `<a id="${item.symbol}" onclick="initEditFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#editFavoriteDialog">
-													<button type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
-													<button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-trash"></span> Delete</button></a>`
+
 							} else {
-								searchTemplate += `<a style="padding:top:10px" id="${item.symbol}" onclick="initAddFavorite('${item.symbol}');" class="text-link" data-toggle="modal" href="#addFavoriteDialog"><button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
+								if (add == false) {
+									searchTemplate += `<a style="padding:top:10px" onclick="initAddFavorite('${item.symbol}');" class="text-link" href="#addFavoriteDialog"><button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
+								} else {
+									searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" value=""></textarea><button id="" onclick="addFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
+								}
 							}
 							searchTemplate += `</div><hr>`;
 						}
@@ -124,7 +139,6 @@
 							$(".mainBoxMiddle").html("Your query returned no results, please try another search.");
 						}
 					});
-
 				})
 			}
 		}
@@ -135,17 +149,25 @@
 			displayResults(searchQuery);
 		}
 
+		getFavorite = (stockSymbol, edit = false) => {
+			let stock = new Stock();
+			let stockFavoritesPromise = stock.GetFavorite(stockSymbol).then(res => {
+				let stockSymbol = res.stockSymbol;
+				let comment = res.comment;
+				displayResults(stockSymbol, edit);
+			})
+		}
+
 		getFavorites = () => {
 			let stock = new Stock();
 			let stockFavoritesPromise = stock.ListFavorites().then(res => {
 				// create a list of stock IDs as string delmited values and pass to search function
-				console.log(res);
 				if (res.length > 0) {
 					let stockSymbols = "";
 					let trailingComma = ",";
 					let x = 0;
 					for (const item of res) {
-						if (x == res.length - 1) { trailingComma = "";	}
+						if (x == res.length - 1) { trailingComma = ""; }
 						x++;
 						stockSymbols += item.stockSymbol += trailingComma;
 					}
@@ -158,22 +180,10 @@
 		}
 
 		initAddFavorite = (stockSymbol) => {
-			let modal = new Modal();
-			modalHTML = modal.AddFavorite(stockSymbol);
-			modalObject = {
-				backgroundColor: "background:white",
-				targetElement: "#modalFavorite",
-				title: "Add Favorite",
-				id: "addFavoriteDialog",
-				content: modalHTML,
-				modalCSS: "height:30vw;",
-				modalIcon: ""
-			};
-			modalDialogComponent(modalObject);
+			displayResults(stockSymbol, false, true);
 		}
 
 		addFavorite = (stockSymbol) => {
-			$(`#${stockSymbol}`).hide();
 			let constants = new Constants();
 			let userID = constants.userID;
 			let comment = $('#favoriteComment').val();
@@ -182,23 +192,10 @@
 			stock.AddFavorite(stockFavoriteModel);
 			getFavorites();
 			statusMessage("Add");
-			$('#addFavoriteDialog').modal('toggle');
 		}
 
 		initEditFavorite = (stockSymbol) => {
-			let stock = new Stock();
-			let stockFavoritesPromise = stock.GetFavorite(stockSymbol).then(res => {
-				let stockSymbol = res.stockSymbol;
-				let comment = res.comment;
-
-				/*Not a big fan of session in other languages but JS session you have more control over. I normally wouldn't use in JS
-				  but with modals is much easier for passing vals with a promise. Without that, the promise cannot pass directly to or initialize
-				  the modal, not even through a callback. But, you don't have to use modals though. Frameworks could handle this through a custom servce.*/
-				sessionStorage.removeItem('favoriteComment'); // clear from memory
-				sessionStorage.removeItem('stockSymbol');
-				sessionStorage.setItem('favoriteComment', comment);
-				sessionStorage.setItem('stockSymbol', stockSymbol);
-			})
+			getFavorite(stockSymbol, true);
 		}
 
 		editFavorite = (stockSymbol) => {
@@ -212,7 +209,6 @@
 			stock.EditFavorite(stockFavoriteModel);
 			getFavorites();
 			statusMessage("Edit");
-			$('#editFavoriteDialog').modal('toggle');
 		}
 
 		removeFavorite = (stockSymbol) => {
@@ -233,19 +229,6 @@
 		$("#ButtonFavorites").on("click", function () {
 			getFavorites();
 		});
-
-		let modal = new Modal();
-		modalHTML = modal.EditFavorite();
-		modalObject = {
-			backgroundColor: "background:white",
-			targetElement: "#modalFavorite",
-			title: "Edit Favorite",
-			id: "editFavoriteDialog",
-			content: modalHTML,
-			modalCSS: "height:30vw;",
-			modalIcon: ""
-		};
-		modalDialogComponent(modalObject);
 
 		statusMessage = (msgType) => {
 			// Could change to switch statement when adding more cases
@@ -271,5 +254,4 @@
 
 	</script>
 </body>
-
 </html>
