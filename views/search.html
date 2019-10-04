@@ -66,201 +66,201 @@
 	</main>
 	<script>
 
-		/* If not logged in, kick back to main (simple forms authentication), normally handled by a login service. For purposes of this demo,
-		    only a few strings are using local session storage. You can also use a wrapper like storage.js. */
-		if (localStorage.getItem("userID") == null) {
-			window.location.href = "../index.html"; // login screen for this app
-		}
+/* If not logged in, kick back to main (simple forms authentication), normally handled by a login service. For purposes of this demo,
+	only a few strings are using local session storage. You can also use a wrapper like storage.js. */
+if (localStorage.getItem("userID") == null) {
+	window.location.href = "../index.html"; // login screen for this app
+}
 
-		/* Normally these user actions would be handled in the component, but because you cannot import classes and call them directly 
-		(without common.js or a framework) then you first have to make a handler call here and then the component*/
+/* Normally these user actions would be handled in the component, but because you cannot import classes and call them directly 
+(without common.js or a framework) then you first have to make a handler call here and then the component*/
 
-		displayResults = (searchQuery, edit = false, add = false) => {
-			/* This method could be refactored into 3 different functions - one for List, one for Add and one for Edit. Doing it this way is a little 
-			   harder to follow but does save some code. The promise code would have to be repeated for each function including everything within the 
-			   scope of that promise. This is where frameworks like Ember or Angular can help using components with services. */
-			if (searchQuery) {
-				let stock = new Stock();
-				let searchTemplate = "";
-				let stockSearchPromise = stock.Search(searchQuery).then(resSearch => {
-					let stockFavoritesList = []; // Object array to store favorites with comments  
-					let stockFavoritesPromise = stock.ListFavorites().then(resFavorites => {
-						// create a list of stock IDs to be filtered by search. 
-						let stockSymbols = "";
-						let trailingComma = ",";
-						let x = 0;
-						for (const item of resFavorites) {
-							stockFavoritesList.push(item);
-							if (x == resFavorites.length - 1) { trailingComma = ""; }
-							x++;
-							stockSymbols += item.stockSymbol += trailingComma;
+displayResults = (searchQuery, edit = false, add = false) => {
+	/* This method could be refactored into 3 different functions - one for List, one for Add and one for Edit. Doing it this way is a little 
+		harder to follow but does save some code. The promise code would have to be repeated for each function including everything within the 
+		scope of that promise. This is where frameworks like Ember or Angular can help using components with services. */
+	if (searchQuery) {
+		let stock = new Stock();
+		let searchTemplate = "";
+		let stockSearchPromise = stock.Search(searchQuery).then(resSearch => {
+			let stockFavoritesList = []; // Object array to store favorites with comments  
+			let stockFavoritesPromise = stock.ListFavorites().then(resFavorites => {
+				// create a list of stock IDs to be filtered by search. 
+				let stockSymbols = "";
+				let trailingComma = ",";
+				let x = 0;
+				for (const item of resFavorites) {
+					stockFavoritesList.push(item);
+					if (x == resFavorites.length - 1) { trailingComma = ""; }
+					x++;
+					stockSymbols += item.stockSymbol += trailingComma;
 
-						}
-						searchQuery = stockSymbols;
+				}
+				searchQuery = stockSymbols;
 
-						// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
-						for (const item of resSearch) {
-							searchTemplate += `<div class=''>
-												StockSymbol: ${item.symbol}<br>
-												Name: ${item.name}<br>
-												High: ${item.high}<br>
-												Low: ${item.low}<br>
-												Open: ${item.open}<br>
-												LastPrice: ${item.lastPrice}<br>
-												PercentChange: ${item.percentChange}<br>`
-							if (searchQuery.includes(item.symbol)) {
-								for (const stockItem of stockFavoritesList) {
-									stockSymbol = stockItem.stockSymbol.replace(",", "");
-									// Show Edit and Delete or Save button based on context
-									if (stockSymbol == item.symbol) {
-										if (edit == false) {
-											searchTemplate += `<div id="editComment-${stockSymbol}"><span style="font-weight:bold">Comment:</span> ${stockItem.comment}</div>
-											<div><button id="" onclick="initEditFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;"
-											class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
-											<button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm">
-											<span class="glyphicon glyphicon-trash"></span> Delete</button></div>`
-										} else {
-											searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment 
-											(optional)" value="">${stockItem.comment}</textarea><button id="" onclick="editFavorite('${stockSymbol}')"; type="button" 
-											style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save
-											</button>`
-										}
-									}
-								}
-
-							} else {
-								if (add == false) {
-									searchTemplate += `<a style="padding:top:10px" onclick="initAddFavorite('${item.symbol}');" class="text-link" href="#addFavoriteDialog">
-									<button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit">
-									</span> Add Favorite</button></a>`
+				// Onclicks are sometimes considered taboo but without a framwork you do not have ng directives (like in Angluar)
+				for (const item of resSearch) {
+					searchTemplate += `<div class=''>
+										StockSymbol: ${item.symbol}<br>
+										Name: ${item.name}<br>
+										High: ${item.high}<br>
+										Low: ${item.low}<br>
+										Open: ${item.open}<br>
+										LastPrice: ${item.lastPrice}<br>
+										PercentChange: ${item.percentChange}<br>`
+					if (searchQuery.includes(item.symbol)) {
+						for (const stockItem of stockFavoritesList) {
+							stockSymbol = stockItem.stockSymbol.replace(",", "");
+							// Show Edit and Delete or Save button based on context
+							if (stockSymbol == item.symbol) {
+								if (edit == false) {
+									searchTemplate += `<div id="editComment-${stockSymbol}"><span style="font-weight:bold">Comment:</span> ${stockItem.comment}</div>
+									<div><button id="" onclick="initEditFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;"
+									class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
+									<button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm">
+									<span class="glyphicon glyphicon-trash"></span> Delete</button></div>`
 								} else {
-									searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" 
-									value=""></textarea><button id="" onclick="addFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" 
-									class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
+									searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment 
+									(optional)" value="">${stockItem.comment}</textarea><button id="" onclick="editFavorite('${stockSymbol}')"; type="button" 
+									style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save
+									</button>`
 								}
 							}
-							searchTemplate += `</div><hr>`;
 						}
-						/* The mainBoxMiddle div could be populated by an Ember or Angular component template 
-  						   The ajax call could be placed into a component or service. Models could be placed into a models folder */
-						if (searchTemplate != "") {
-							$(".mainBoxMiddle").html(searchTemplate);
+
+					} else {
+						if (add == false) {
+							searchTemplate += `<a style="padding:top:10px" onclick="initAddFavorite('${item.symbol}');" class="text-link" href="#addFavoriteDialog">
+							<button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit">
+							</span> Add Favorite</button></a>`
 						} else {
-							$(".mainBoxMiddle").html("Your query returned no results, please try another search.");
+							searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" 
+							value=""></textarea><button id="" onclick="addFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" 
+							class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
 						}
-					});
-				})
-			}
-		}
-
-		search = () => {
-			// Could do some search string validation here if needed
-			searchQuery = $("#searchTextBox").val().replace(/\s/g, ''); // remove spaces after commas (api does not accept)
-			displayResults(searchQuery);
-		}
-
-		getFavorite = (stockSymbol, edit = false) => {
-			let stock = new Stock();
-			let stockFavoritesPromise = stock.GetFavorite(stockSymbol).then(res => {
-				let stockSymbol = res.stockSymbol;
-				let comment = res.comment;
-				displayResults(stockSymbol, edit);
-			})
-		}
-
-		getFavorites = () => {
-			let stock = new Stock();
-			let stockFavoritesPromise = stock.ListFavorites().then(res => {
-				// create a list of stock IDs as string delmited values and pass to search function
-				if (res.length > 0) {
-					let stockSymbols = "";
-					let trailingComma = ",";
-					let x = 0;
-					for (const item of res) {
-						if (x == res.length - 1) { trailingComma = ""; }
-						x++;
-						stockSymbols += item.stockSymbol += trailingComma;
 					}
-					searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
-					displayResults(searchQuery);
-				} else {
-					$("#mainBoxMiddle").html("Unable to find any favorites. Try searching and adding new favorites.");
+					searchTemplate += `</div><hr>`;
 				}
-			})
-		}
+				/* The mainBoxMiddle div could be populated by an Ember or Angular component template 
+					The ajax call could be placed into a component or service. Models could be placed into a models folder */
+				if (searchTemplate != "") {
+					$(".mainBoxMiddle").html(searchTemplate);
+				} else {
+					$(".mainBoxMiddle").html("Your query returned no results, please try another search.");
+				}
+			});
+		})
+	}
+}
 
-		initAddFavorite = (stockSymbol) => {
-			displayResults(stockSymbol, false, true);
-		}
+search = () => {
+	// Could do some search string validation here if needed
+	searchQuery = $("#searchTextBox").val().replace(/\s/g, ''); // remove spaces after commas (api does not accept)
+	displayResults(searchQuery);
+}
 
-		addFavorite = (stockSymbol) => {
-			let constants = new Constants();
-			let userID = constants.userID;
-			let comment = $('#favoriteComment').val();
-			let stockFavoriteModel = { stockSymbol, comment, userID };
-			let stock = new Stock();
-			stock.AddFavorite(stockFavoriteModel);
-			getFavorites();
-			statusMessage("Add");
-		}
+getFavorite = (stockSymbol, edit = false) => {
+	let stock = new Stock();
+	let stockFavoritesPromise = stock.GetFavorite(stockSymbol).then(res => {
+		let stockSymbol = res.stockSymbol;
+		let comment = res.comment;
+		displayResults(stockSymbol, edit);
+	})
+}
 
-		initEditFavorite = (stockSymbol) => {
-			getFavorite(stockSymbol, true);
-		}
-
-		editFavorite = (stockSymbol) => {
-			let constants = new Constants();
-			let userID = constants.userID;
-			let comment = $('#favoriteComment').val();
-			let stockFavoriteModel = { stockSymbol, comment, userID };
-			let stock = new Stock();
-			// This api has no ids for the stocks so since not storing them in db, will do a lookup with 
-			// userID and stock ID (we already have these). In essence, this acts like a composite key in relational db terminology.
-			stock.EditFavorite(stockFavoriteModel);
-			getFavorites();
-			statusMessage("Edit");
-		}
-
-		removeFavorite = (stockSymbol) => {
-			let constants = new Constants();
-			let userID = constants.userID;
-			let comment = "";
-			let stockFavoriteModel = { stockSymbol, comment, userID };
-			let stock = new Stock();
-			stock.RemoveFavorite(stockFavoriteModel);
-			getFavorites();
-			statusMessage("Delete");
-		}
-
-		$("#ButtonSearch").on("click", function () {
-			search();
-		});
-
-		$("#ButtonFavorites").on("click", function () {
-			getFavorites();
-		});
-
-		statusMessage = (msgType) => {
-			// Could change to switch statement when adding more cases
-			if ((msgType) == "Add") {
-				$("#status").html("Added successfully!")
+getFavorites = () => {
+	let stock = new Stock();
+	let stockFavoritesPromise = stock.ListFavorites().then(res => {
+		// create a list of stock IDs as string delmited values and pass to search function
+		if (res.length > 0) {
+			let stockSymbols = "";
+			let trailingComma = ",";
+			let x = 0;
+			for (const item of res) {
+				if (x == res.length - 1) { trailingComma = ""; }
+				x++;
+				stockSymbols += item.stockSymbol += trailingComma;
 			}
-			if ((msgType) == "Edit") {
-				$("#status").html("Updated successfully!")
-			}
-			if ((msgType) == "Delete") {
-				$("#status").html("Removed successfully!")
-			}
-			setTimeout(function () { $("#status").html("") }, 5000); // clear message after 5 secs
+			searchQuery = stockSymbols; // return favorites when clicking 'My Favorites' button
+			displayResults(searchQuery);
+		} else {
+			$("#mainBoxMiddle").html("Unable to find any favorites. Try searching and adding new favorites.");
 		}
+	})
+}
 
-		var input = document.getElementById("searchTextBox");
-		input.addEventListener("keyup", function (event) {
-			event.preventDefault();
-			if (event.keyCode === 13) {
-				search();
-			}
-		});
+initAddFavorite = (stockSymbol) => {
+	displayResults(stockSymbol, false, true);
+}
+
+addFavorite = (stockSymbol) => {
+	let constants = new Constants();
+	let userID = constants.userID;
+	let comment = $('#favoriteComment').val();
+	let stockFavoriteModel = { stockSymbol, comment, userID };
+	let stock = new Stock();
+	stock.AddFavorite(stockFavoriteModel);
+	getFavorites();
+	statusMessage("Add");
+}
+
+initEditFavorite = (stockSymbol) => {
+	getFavorite(stockSymbol, true);
+}
+
+editFavorite = (stockSymbol) => {
+	let constants = new Constants();
+	let userID = constants.userID;
+	let comment = $('#favoriteComment').val();
+	let stockFavoriteModel = { stockSymbol, comment, userID };
+	let stock = new Stock();
+	// This api has no ids for the stocks so since not storing them in db, will do a lookup with 
+	// userID and stock ID (we already have these). In essence, this acts like a composite key in relational db terminology.
+	stock.EditFavorite(stockFavoriteModel);
+	getFavorites();
+	statusMessage("Edit");
+}
+
+removeFavorite = (stockSymbol) => {
+	let constants = new Constants();
+	let userID = constants.userID;
+	let comment = "";
+	let stockFavoriteModel = { stockSymbol, comment, userID };
+	let stock = new Stock();
+	stock.RemoveFavorite(stockFavoriteModel);
+	getFavorites();
+	statusMessage("Delete");
+}
+
+$("#ButtonSearch").on("click", function () {
+	search();
+});
+
+$("#ButtonFavorites").on("click", function () {
+	getFavorites();
+});
+
+statusMessage = (msgType) => {
+	// Could change to switch statement when adding more cases
+	if ((msgType) == "Add") {
+		$("#status").html("Added successfully!")
+	}
+	if ((msgType) == "Edit") {
+		$("#status").html("Updated successfully!")
+	}
+	if ((msgType) == "Delete") {
+		$("#status").html("Removed successfully!")
+	}
+	setTimeout(function () { $("#status").html("") }, 5000); // clear message after 5 secs
+}
+
+var input = document.getElementById("searchTextBox");
+input.addEventListener("keyup", function (event) {
+	event.preventDefault();
+	if (event.keyCode === 13) {
+		search();
+	}
+});
 
 	</script>
 </body>
