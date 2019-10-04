@@ -5,3 +5,7 @@ The app uses ECMA6 classes that act as components in other framworks that implem
 like Ember or Anguar without too much hassle.  
 
 The api server is a Node server in the api folder. This server can be swapped out with other implementations (i.e. .NET API etc.). The app  should run on any web server.  
+
+Only tested with Google
+
+Demo: http://ifusionsoft.com/projects/cocodechallenge/index.html
