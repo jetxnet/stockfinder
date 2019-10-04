@@ -27,6 +27,7 @@
 	<script src="../js/components.js"></script>
 
 </head>
+
 <body>
 	<div>
 		<table>
@@ -65,19 +66,19 @@
 	</main>
 	<script>
 
-		// If not logged in, kick back to main (simple forms authentication), normally handled by a login service. For purposes of this demo, only a few strings are using
-		// local session storage. You can also use a wrapper like storage.js.
+		/* If not logged in, kick back to main (simple forms authentication), normally handled by a login service. For purposes of this demo,
+		    only a few strings are using local session storage. You can also use a wrapper like storage.js. */
 		if (localStorage.getItem("userID") == null) {
 			window.location.href = "../index.html"; // login screen for this app
 		}
 
-		// Normally these user actions would be handled in the component, but because you cannot import classes and call them directly (without common.js or a framework)
-		// then you first have to make a handler call here and then the component
+		/* Normally these user actions would be handled in the component, but because you cannot import classes and call them directly 
+		(without common.js or a framework) then you first have to make a handler call here and then the component*/
 
 		displayResults = (searchQuery, edit = false, add = false) => {
-			/* This method could be refactored into 3 different functions - one for List, one for Add and one for Edit. Doing it this way is a little harder to follow but
-			   does save some code. The promise code would have to be repeated for each function including everything within the scope of that promise. This is where frameworks
-			   like Ember or Angular can help using components with services. */
+			/* This method could be refactored into 3 different functions - one for List, one for Add and one for Edit. Doing it this way is a little 
+			   harder to follow but does save some code. The promise code would have to be repeated for each function including everything within the 
+			   scope of that promise. This is where frameworks like Ember or Angular can help using components with services. */
 			if (searchQuery) {
 				let stock = new Stock();
 				let searchTemplate = "";
@@ -114,19 +115,28 @@
 									if (stockSymbol == item.symbol) {
 										if (edit == false) {
 											searchTemplate += `<div id="editComment-${stockSymbol}"><span style="font-weight:bold">Comment:</span> ${stockItem.comment}</div>
-														 	  <div><button id="" onclick="initEditFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
-														  	  <button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-trash"></span> Delete</button></div>`
+											<div><button id="" onclick="initEditFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;"
+											class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Edit</button>
+											<button onclick="removeFavorite('${item.symbol}');" type="button" style="margin-bottom:5px;" class="btn btn-primary btn-sm">
+											<span class="glyphicon glyphicon-trash"></span> Delete</button></div>`
 										} else {
-											searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" value="">${stockItem.comment}</textarea><button id="" onclick="editFavorite('${stockSymbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
+											searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment 
+											(optional)" value="">${stockItem.comment}</textarea><button id="" onclick="editFavorite('${stockSymbol}')"; type="button" 
+											style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save
+											</button>`
 										}
 									}
 								}
 
 							} else {
 								if (add == false) {
-									searchTemplate += `<a style="padding:top:10px" onclick="initAddFavorite('${item.symbol}');" class="text-link" href="#addFavoriteDialog"><button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Add Favorite</button></a>`
+									searchTemplate += `<a style="padding:top:10px" onclick="initAddFavorite('${item.symbol}');" class="text-link" href="#addFavoriteDialog">
+									<button type="button" style="margin-top:10px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit">
+									</span> Add Favorite</button></a>`
 								} else {
-									searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" value=""></textarea><button id="" onclick="addFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
+									searchTemplate += `<textarea style="width:340px" name="favoriteComment" id="favoriteComment" placeholder="Enter a comment (optional)" 
+									value=""></textarea><button id="" onclick="addFavorite('${item.symbol}')"; type="button" style="margin-right:5px; margin-bottom:5px;" 
+									class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-edit"></span> Save</button>`
 								}
 							}
 							searchTemplate += `</div><hr>`;
@@ -254,4 +264,5 @@
 
 	</script>
 </body>
+
 </html>
