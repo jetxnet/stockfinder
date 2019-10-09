@@ -6,7 +6,7 @@ like Ember or Angular without too much hassle.
 
 The api server is a Node server in the api folder. This server can be swapped out with other implementations (i.e. .NET API etc.). The app  should run on any web server.  
 
-The persisent api storage is MongoDB
+The persistent api storage is MongoDB
 
 Only tested with Chrome
 
